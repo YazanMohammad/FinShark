@@ -1,4 +1,5 @@
-﻿using FinShark.Api.Data;
+﻿using api.Helpers;
+using FinShark.Api.Data;
 using FinShark.Api.Dtos.Stock;
 using FinShark.Api.Interfaces;
 using FinShark.Api.Models;
@@ -30,11 +31,30 @@ namespace FinShark.Api.Repos
             await _context.SaveChangesAsync();
             return stockModel;
         }
-        //Get all items
-        public async Task<List<Stock>> GetAllAsync()
+        //        Get all items
+        public async Task<List<Stock>> GetAllAsync(QueryObject query)
         {
-            return await _context.Stocks.Include(c => c.Comments).ToListAsync();
+            var stocks = _context.Stocks.Include(c => c.Comments).AsQueryable();
+            if (!string.IsNullOrWhiteSpace(query.CompanyName))
+            {
+                stocks = stocks.Where(c => c.CompanyName.Contains(query.CompanyName));
+            }
+            if (!string.IsNullOrWhiteSpace(query.Symbol))
+            {
+                stocks = stocks.Where(s => s.Symbol.Contains(query.Symbol));
+            }
+            if (!string.IsNullOrWhiteSpace(query.SortBy))
+            {
+                if (query.SortBy.Equals("Symbol", StringComparison.OrdinalIgnoreCase))
+                {
+                    stocks = query.IsDecsending ? stocks.OrderByDescending(s => s.Symbol) : stocks.OrderBy(s => s.Symbol);
+                }
+            }
+            var skipNumber = (query.PageNumber - 1) * query.PageSize;// skip number
+
+            return await stocks.Skip(skipNumber).Take(query.PageSize).ToListAsync();
         }
+
         //Get an item by ID
         public async Task<Stock?> GetByIdAsync(int id)
         {
@@ -42,6 +62,12 @@ namespace FinShark.Api.Repos
             if (result == null) { return null; }
             return result;
         }
+
+        public Task<bool> StockExists(int id)
+        {
+            return _context.Stocks.AnyAsync(i => i.Id == id);
+        }
+
         //Update
         public async Task<Stock?> UpdateAsync(int id, UpdateStockRequestDto updateReq)
         {

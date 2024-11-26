@@ -13,14 +13,20 @@ namespace FinShark.Api.Repos
             _context = Context;
         }
 
-        public Task<Comment> CreateAsync(Comment commentModel)
+        public async Task<Comment> CreateAsync(Comment commentModel)
         {
-            throw new NotImplementedException();
+            await _context.Comments.AddAsync(commentModel);
+            await _context.SaveChangesAsync();
+            return commentModel;
         }
 
-        public Task<Comment?> DeleteAsync(int id)
+        public async Task<Comment?> DeleteAsync(int id)
         {
-            throw new NotImplementedException();
+            var comment = await _context.Comments.FirstOrDefaultAsync(c => c.Id == id);
+            if (comment == null) { return null; }
+            _context.Comments.Remove(comment);
+            await _context.SaveChangesAsync();
+            return comment;
         }
 
         public async Task<List<Comment>> GetAllAsync()
@@ -35,9 +41,17 @@ namespace FinShark.Api.Repos
             return result;
         }
 
-        public Task<Comment?> UpdateAsync(int id, Comment commentModel)
+        public async Task<Comment?> UpdateAsync(int id, Comment commentModel)
         {
-            throw new NotImplementedException();
+            var comment = await _context.Comments.FindAsync(id);
+            if (comment == null) { return null; }
+
+            comment.Title = commentModel.Title;
+            comment.Content = commentModel.Content;
+
+            await _context.SaveChangesAsync();
+            return comment;
+
         }
     }
 }

@@ -17,11 +17,23 @@ namespace FinShark.Api.Mappers
                 StockId = commentModel.StockId,
             };
         }
-        public static Comment ToCommentFromCreatedDTO(this Comment commentModel)
+        public static Comment ToCommentFromCreatedDTO(this CreateCommentDto commentDto, int stockId)
         {
             return new Comment
             {
 
+                Title = commentDto.Title,
+                Content = commentDto.Content,
+                StockId = stockId
+            };
+        }
+        public static Comment ToCommentFromUpdateDTO(this UpdateCommentReqDto commentDto)
+        {
+            return new Comment
+            {
+
+                Title = commentDto.Title,
+                Content = commentDto.Content
             };
         }
     }
